@@ -9,10 +9,43 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
+      background-color: #d3badc;
     }
 
     #menu {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 20px;
+      background-color: #d3badc;
+    }
+
+    #menu h1 {
+      font-size: 48px;
+    }
+
+    #menu button {
+      padding: 20px 40px;
+      font-size: 24px;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: white;
+    }
+
+    #menu button.easy {
+      background-color: #28a745;
+    }
+
+    #menu button.hard {
+      background-color: #dc3545;
+    }
+
+    #menu button:hover {
+      opacity: 0.8;
     }
 
     #game {
@@ -88,14 +121,22 @@
     #timer {
       font-size: 24px;
     }
+
+    #game button {
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
   <div id="menu">
     <h1>Reflejos Xbox</h1>
-    <button onclick="startGame('easy')">Modo Fácil</button>
-    <button onclick="startGame('hard')">Modo Difícil</button>
+    <button class="easy" onclick="startGame('easy')">Modo Fácil</button>
+    <button class="hard" onclick="startGame('hard')">Modo Difícil</button>
   </div>
 
   <div id="game">
@@ -146,7 +187,7 @@
       clearTimeout(timer);
       clearInterval(timerInterval);
       document.getElementById('game').style.display = 'none';
-      document.getElementById('menu').style.display = 'block';
+      document.getElementById('menu').style.display = 'flex';
     }
 
     function updateUI() {
@@ -217,7 +258,7 @@
     }
 
     function checkGamepad() {
-      if (!gameRunning) return; // Stop checking input if the game is not running
+      if (!gameRunning) return;
 
       const gamepads = navigator.getGamepads();
       if (gamepads[0]) {
