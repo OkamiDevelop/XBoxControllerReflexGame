@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reflejos Xbox</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    #menu {
+      display: block;
+    }
+
+    #game {
+      display: none;
+    }
+
+    #buttonContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background-color: lightgray;
+      position: relative;
+      margin: 20px auto;
+    }
+
+    .button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      opacity: 0.5;
+    }
+
+    .easy #A {
+      background-color: green;
+      top: 75%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .easy #B {
+      background-color: red;
+      top: 50%;
+      left: 75%;
+      transform: translate(-50%, -50%);
+    }
+
+    .easy #X {
+      background-color: blue;
+      top: 50%;
+      left: 25%;
+      transform: translate(-50%, -50%);
+    }
+
+    .easy #Y {
+      background-color: yellow;
+      top: 25%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .hard .button {
+      display: none;
+    }
+
+    .hard #targetButton {
+      display: flex;
+      font-size: 48px;
+      font-weight: bold;
+      color: black;
+    }
+
+    #score,
+    #errors,
+    #timer {
+      font-size: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="menu">
+    <h1>Reflejos Xbox</h1>
+    <button onclick="startGame('easy')">Modo Fácil</button>
+    <button onclick="startGame('hard')">Modo Difícil</button>
+  </div>
+
+  <div id="game">
+    <button onclick="goToMenu()">Menú</button>
+    <h1>Reflejos Xbox</h1>
+    <div id="buttonContainer" class="easy">
+      <div id="A" class="button">A</div>
+      <div id="B" class="button">B</div>
+      <div id="X" class="button">X</div>
+      <div id="Y" class="button">Y</div>
+      <div id="targetButton"></div> <!-- Modo difícil -->
+    </div>
+    <div id="score">Aciertos: 0</div>
+    <div id="errors">Errores: 0</div>
+    <div id="timer">Tiempo restante: 3.00s</div>
+  </div>
+
+  <script>
+    const buttons = ['A', 'B', 'X', 'Y'];
+    let currentButton = '';
+    let score = 0;
+    let errors = 0;
+    const timeLimit = 3000;
+    let timer, timerInterval;
+    let lastPressTime = 0;
+    const debounceTime = 300;
+    let gameMode = 'easy';
+    let gameRunning = false;
+
+    const successSound = new Audio('./audio/success.mp3');
+    const failSound = new Audio('./audio/fail.mp3');
+
+    function startGame(mode) {
+      gameRunning = true;
+      gameMode = mode;
+      document.getElementById('menu').style.display = 'none';
+      document.getElementById('game').style.display = 'block';
+      document.getElementById('buttonContainer').className = mode;
+      score = 0;
+      errors = 0;
+      updateUI();
+      nextRound();
+      requestAnimationFrame(checkGamepad);
+    }
+
+    function goToMenu() {
+      gameRunning = false;
+      clearTimeout(timer);
+      clearInterval(timerInterval);
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('menu').style.display = 'block';
+    }
+
+    function updateUI() {
+      document.getElementById('score').textContent = `Aciertos: ${score}`;
+      document.getElementById('errors').textContent = `Errores: ${errors}`;
+    }
+
+    function nextRound() {
+      if (errors >= 5) {
+        endGame();
+        return;
+      }
+      currentButton = buttons[Math.floor(Math.random() * buttons.length)];
+      highlightButton(currentButton);
+      startTimer();
+    }
+
+    function highlightButton(button) {
+      const allButtons = document.querySelectorAll('.button');
+      if (gameMode === 'easy') {
+        allButtons.forEach(btn => btn.style.opacity = '0.5');
+        document.getElementById(button).style.opacity = '1';
+        document.getElementById('targetButton').textContent = '';
+      } else {
+        allButtons.forEach(btn => btn.style.opacity = '0.5');
+        document.getElementById('targetButton').textContent = button;
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      clearTimeout(timer);
+      let remainingTime = timeLimit;
+      document.getElementById('timer').textContent = `Tiempo restante: ${(remainingTime / 1000).toFixed(2)}s`;
+
+      timerInterval = setInterval(() => {
+        remainingTime -= 50;
+        document.getElementById('timer').textContent = `Tiempo restante: ${(remainingTime / 1000).toFixed(2)}s`;
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+        }
+      }, 50);
+
+      timer = setTimeout(() => handleFail(), timeLimit);
+    }
+
+    function handleSuccess() {
+      clearTimeout(timer);
+      clearInterval(timerInterval);
+      successSound.play();
+      score++;
+      updateUI();
+      nextRound();
+    }
+
+    function handleFail() {
+      clearTimeout(timer);
+      clearInterval(timerInterval);
+      failSound.play();
+      errors++;
+      updateUI();
+      nextRound();
+    }
+
+    function endGame() {
+      alert(`¡Game Over! Puntuación final: ${score}`);
+      goToMenu();
+    }
+
+    function checkGamepad() {
+      if (!gameRunning) return; // Stop checking input if the game is not running
+
+      const gamepads = navigator.getGamepads();
+      if (gamepads[0]) {
+        const gp = gamepads[0];
+        const buttonMap = { 0: 'A', 1: 'B', 2: 'X', 3: 'Y' };
+        const currentTime = Date.now();
+
+        gp.buttons.forEach((button, index) => {
+          if (button.pressed && buttonMap[index]) {
+            if (currentTime - lastPressTime > debounceTime) {
+              lastPressTime = currentTime;
+              if (buttonMap[index] === currentButton) {
+                handleSuccess();
+              } else {
+                handleFail();
+              }
+            }
+          }
+        });
+      }
+      window.requestAnimationFrame(checkGamepad);
+    }
+  </script>
+</body>
+
+</html>
