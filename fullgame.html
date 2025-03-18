@@ -10,6 +10,17 @@
       font-family: Arial, sans-serif;
       text-align: center;
       background-color: #d3badc;
+      margin: 0;
+      padding: 0;
+    }
+
+    #languageSelector {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 16px;
+      padding: 5px;
+      border-radius: 8px;
     }
 
     #menu {
@@ -133,15 +144,22 @@
 </head>
 
 <body>
+
+  <!-- Language Selector -->
+  <select id="languageSelector" onchange="changeLanguage(this.value)">
+    <option value="es" selected>Español</option>
+    <option value="en">English</option>
+  </select>
+
   <div id="menu">
-    <h1>Reflejos Xbox</h1>
-    <button class="easy" onclick="startGame('easy')">Modo Fácil</button>
-    <button class="hard" onclick="startGame('hard')">Modo Difícil</button>
+    <h1 id="title">Reflejos Xbox</h1>
+    <button class="easy" onclick="startGame('easy')" id="easyBtn">Modo Fácil</button>
+    <button class="hard" onclick="startGame('hard')" id="hardBtn">Modo Difícil</button>
   </div>
 
   <div id="game">
-    <button onclick="goToMenu()">Menú</button>
-    <h1>Reflejos Xbox</h1>
+    <button onclick="goToMenu()" id="menuBtn">Menú</button>
+    <h1 id="gameTitle">Reflejos Xbox</h1>
     <div id="buttonContainer" class="easy">
       <div id="A" class="button">A</div>
       <div id="B" class="button">B</div>
@@ -165,9 +183,33 @@
     const debounceTime = 300;
     let gameMode = 'easy';
     let gameRunning = false;
+    let currentLang = 'es';
 
     const successSound = new Audio('./audio/success.mp3');
     const failSound = new Audio('./audio/fail.mp3');
+
+    const translations = {
+      es: {
+        title: 'Juego Reflejos Xbox',
+        easy: 'Modo Fácil',
+        hard: 'Modo Difícil',
+        menu: 'Menú',
+        score: 'Aciertos',
+        errors: 'Errores',
+        timeLeft: 'Tiempo restante',
+        gameOver: '¡Game Over! Puntuación final: '
+      },
+      en: {
+        title: 'Xbox Reflex Game',
+        easy: 'Easy Mode',
+        hard: 'Hard Mode',
+        menu: 'Menu',
+        score: 'Hits',
+        errors: 'Errors',
+        timeLeft: 'Time left',
+        gameOver: 'Game Over! Final Score: '
+      }
+    };
 
     function startGame(mode) {
       gameRunning = true;
@@ -191,8 +233,8 @@
     }
 
     function updateUI() {
-      document.getElementById('score').textContent = `Aciertos: ${score}`;
-      document.getElementById('errors').textContent = `Errores: ${errors}`;
+      document.getElementById('score').textContent = `${translations[currentLang].score}: ${score}`;
+      document.getElementById('errors').textContent = `${translations[currentLang].errors}: ${errors}`;
     }
 
     function nextRound() {
@@ -221,11 +263,11 @@
       clearInterval(timerInterval);
       clearTimeout(timer);
       let remainingTime = timeLimit;
-      document.getElementById('timer').textContent = `Tiempo restante: ${(remainingTime / 1000).toFixed(2)}s`;
+      document.getElementById('timer').textContent = `${translations[currentLang].timeLeft}: ${(remainingTime / 1000).toFixed(2)}s`;
 
       timerInterval = setInterval(() => {
         remainingTime -= 50;
-        document.getElementById('timer').textContent = `Tiempo restante: ${(remainingTime / 1000).toFixed(2)}s`;
+        document.getElementById('timer').textContent = `${translations[currentLang].timeLeft}: ${(remainingTime / 1000).toFixed(2)}s`;
         if (remainingTime <= 0) {
           clearInterval(timerInterval);
         }
@@ -253,7 +295,7 @@
     }
 
     function endGame() {
-      alert(`¡Game Over! Puntuación final: ${score}`);
+      alert(`${translations[currentLang].gameOver} ${score}`);
       goToMenu();
     }
 
@@ -281,7 +323,19 @@
       }
       window.requestAnimationFrame(checkGamepad);
     }
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('title').textContent = translations[lang].title;
+      document.getElementById('gameTitle').textContent = translations[lang].title;
+      document.getElementById('easyBtn').textContent = translations[lang].easy;
+      document.getElementById('hardBtn').textContent = translations[lang].hard;
+      document.getElementById('menuBtn').textContent = translations[lang].menu;
+      updateUI();
+      document.getElementById('timer').textContent = `${translations[lang].timeLeft}: 3.00s`;
+    }
   </script>
+
 </body>
 
 </html>
